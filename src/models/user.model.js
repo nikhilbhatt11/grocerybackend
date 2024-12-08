@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 const UserSchema = new Schema(
   {
     shopname: {
@@ -48,12 +49,15 @@ UserSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
-      shopname: this.shopname,
       email: this.email,
+      shopname: this.shopname,
+
       ownername: this.ownername,
     },
     process.env.ACCESS_TOKEN_SECRET,
-    { expireIn: process.env.ACCESS_TOKEN_EXPIRY }
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+    }
   );
 };
 UserSchema.methods.generateRefreshToken = function () {
@@ -62,7 +66,9 @@ UserSchema.methods.generateRefreshToken = function () {
       _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
-    { expireIn: process.env.REFRESH_TOKEN_EXPIRY }
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+    }
   );
 };
 
