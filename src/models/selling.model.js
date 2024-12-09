@@ -8,10 +8,7 @@ const SellingSchema = new Schema(
         ref: "Soldproduct",
       },
     ],
-    owner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+
     customername: {
       type: String,
       required: true,
