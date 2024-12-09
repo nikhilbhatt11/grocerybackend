@@ -25,12 +25,12 @@ const getAllProducts = asyncHandler(async (req, res) => {
       { $limit: limitNumber },
       {
         $project: {
-          _id: 1,
           title: 1,
           category: 1,
           StockQuantity: 1,
+          price: 1,
+          discount: 1,
           owner: 1,
-          createdAt: 1,
         },
       },
     ]);
@@ -59,7 +59,7 @@ const addProduct = asyncHandler(async (req, res) => {
   if ([title, category].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "title and category are required");
   }
-  if (StockQuantity == 0 || price == 0) {
+  if (StockQuantity === 0 || price === 0) {
     throw new ApiError(
       400,
       "stock qauntity and price should be greater than 0 "
@@ -151,10 +151,52 @@ const searchProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { title, category, StockQuantity, price, discount, unit } = req.body;
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new ApiError(400, "Product not found");
+  }
+  if ([title, category].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "all fields are required");
+  }
+
+  if (StockQuantity < 0 || price < 0 || discount < 0 || discount > 100) {
+    throw new ApiError(400, "Invalid numeric values provided");
+  }
+
+  product.title = title || product.title;
+  product.category = category || product.category;
+  product.StockQuantity =
+    StockQuantity != null
+      ? product.StockQuantity + StockQuantity
+      : product.StockQuantity;
+  product.price = price ?? product.price;
+  product.discount = discount ?? product.discount;
+  product.unit = unit || product.unit;
+  await product.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(202, product, "product updated successfully"));
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+    if (!deletedProduct) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, {}, "Product not found"));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Product deleted successfully"));
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
 });
 
 export {
