@@ -143,7 +143,7 @@ const deleteSale = asyncHandler(async (req, res) => {
 
   try {
     const deleteSale = await Selling.findById(saleId);
-    console.log(deleteSale);
+
     if (!deleteSale) {
       throw new ApiError(
         400,
@@ -173,6 +173,7 @@ const deleteSale = asyncHandler(async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 });
+
 const deleteProductOfSale = asyncHandler(async (req, res) => {
   const { saleId, productId } = req.params;
 
@@ -190,9 +191,7 @@ const deleteProductOfSale = asyncHandler(async (req, res) => {
     }
     const productToRemove = saledProducts[productIndex];
     const quantityToReturn = productToRemove.quantity;
-    const abcd = saledProducts.splice(productIndex, 1);
-    console.log(abcd);
-    console.log("saledproduct", saledProducts);
+    saledProducts.splice(productIndex, 1);
 
     sale.totalSaleAmount = saledProducts.reduce(
       (sum, product) => sum + product.total,
