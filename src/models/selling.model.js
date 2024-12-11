@@ -46,6 +46,18 @@ const SellingSchema = new Schema(
       type: Number,
       required: true,
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    date: {
+      type: String,
+      required: true,
+    },
+    payment: {
+      type: String,
+      enum: ["cash", "card", "Online", "udhar"],
+    },
   },
   { timestamps: true }
 );
