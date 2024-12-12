@@ -34,6 +34,17 @@ const getAllProducts = asyncHandler(async (req, res) => {
         },
       },
     ]);
+    if (allProducts.length <= 0) {
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            202,
+            {},
+            "No product is added please add product first"
+          )
+        );
+    }
     const totalProducts = await Product.countDocuments({ owner: userId });
     return res.status(200).json(
       new ApiResponse(
@@ -49,6 +60,65 @@ const getAllProducts = asyncHandler(async (req, res) => {
     );
   } catch (error) {
     console.error("Error fetching all products of the user", error);
+    throw new ApiError(500, "Server error. Please try again later.");
+  }
+});
+
+const showInventry = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const userId = req.user._id;
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+  if (pageNumber <= 0 || limitNumber <= 0) {
+    throw new ApiError(400, "Page and limit must be positive integers.");
+  }
+  try {
+    const products = await Product.aggregate([
+      {
+        $match: {
+          owner: userId,
+          StockQuantity: { $gt: 0 },
+        },
+      },
+      {
+        $sort: { StockQuantity: 1, _id: 1 },
+      },
+      { $skip: (pageNumber - 1) * limitNumber },
+      { $limit: limitNumber },
+      {
+        $project: {
+          title: 1,
+          category: 1,
+          StockQuantity: 1,
+          price: 1,
+          discount: 1,
+          owner: 1,
+        },
+      },
+    ]);
+    if (products.length <= 0) {
+      return res
+        .status(200)
+        .json(new ApiResponse(202, {}, "The inventry is empty"));
+    }
+    const totalProducts = await Product.countDocuments({
+      owner: userId,
+      stockQuantity: { $gt: 0 },
+    });
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          totalProducts,
+          currentPage: pageNumber,
+          totalPages: Math.ceil(totalProducts / limitNumber),
+          products,
+        },
+        "All products of the user send successfully"
+      )
+    );
+  } catch (error) {
+    console.error("Error fetching Invertry of the user", error);
     throw new ApiError(500, "Server error. Please try again later.");
   }
 });
@@ -205,4 +275,5 @@ export {
   searchProduct,
   updateProduct,
   deleteProduct,
+  showInventry,
 };

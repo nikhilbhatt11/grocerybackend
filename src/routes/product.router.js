@@ -5,6 +5,7 @@ import {
   deleteProduct,
   getAllProducts,
   searchProduct,
+  showInventry,
   updateProduct,
 } from "../controllers/product.controller.js";
 
@@ -14,6 +15,7 @@ router.use(verifyJWT);
 router.route("/add-product").post(addProduct);
 router.route("/search").get(searchProduct);
 router.route("/").get(getAllProducts);
+router.route("/inventry").get(showInventry);
 router.route("/:productId").patch(updateProduct);
 router.route("/:productId").delete(deleteProduct);
 
