@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { ApiError } from "./utils/ApiError.js";
+import { errorHandler } from "./middlewares/errors.middleware.js";
 const app = express();
 
 app.use(
@@ -27,5 +29,11 @@ import salesRouter from "./routes/sell.route.js";
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sales", salesRouter);
+
+app.all("*", (req, res, next) => {
+  next(new ApiError(404, `Can't find ${req.originalUrl} on this server`));
+});
+
+app.use(errorHandler);
 
 export { app };

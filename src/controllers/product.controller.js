@@ -129,12 +129,13 @@ const addProduct = asyncHandler(async (req, res) => {
   if ([title, category].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "title and category are required");
   }
-  if (StockQuantity === 0 || price === 0) {
-    throw new ApiError(
-      400,
-      "stock qauntity and price should be greater than 0 "
-    );
+  if (StockQuantity <= 0 || price <= 0) {
+    throw new ApiError(400, "Stock Qty and Price should be greater than 0");
   }
+  if (discount < 0) {
+    throw new ApiError(400, "Discount should not be less than 0");
+  }
+
   try {
     const product = await Product.create({
       title,
@@ -217,6 +218,26 @@ const searchProduct = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Server error. Please try again later.");
   }
 });
+const getProductById = async (req, res, next) => {
+  const { productId } = req.params;
+
+  try {
+    if (!productId || !/^[0-9a-fA-F]{24}$/.test(productId)) {
+      throw new ApiError(400, "Invalid product ID format.");
+    }
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new ApiError(404, "Product not found");
+    }
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(201, product, "products details fetched successfully")
+      );
+  } catch (error) {
+    next(error);
+  }
+};
 
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
@@ -276,4 +297,5 @@ export {
   updateProduct,
   deleteProduct,
   showInventry,
+  getProductById,
 };

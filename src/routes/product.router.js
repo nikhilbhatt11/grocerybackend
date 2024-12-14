@@ -4,6 +4,7 @@ import {
   addProduct,
   deleteProduct,
   getAllProducts,
+  getProductById,
   searchProduct,
   showInventry,
   updateProduct,
@@ -16,6 +17,7 @@ router.route("/add-product").post(addProduct);
 router.route("/search").get(searchProduct);
 router.route("/").get(getAllProducts);
 router.route("/inventry").get(showInventry);
+router.route("/:productId").get(getProductById);
 router.route("/:productId").patch(updateProduct);
 router.route("/:productId").delete(deleteProduct);
 
