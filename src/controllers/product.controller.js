@@ -28,6 +28,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
           title: 1,
           category: 1,
           StockQuantity: 1,
+          unit: 1,
           price: 1,
           discount: 1,
           owner: 1,
@@ -90,6 +91,7 @@ const showInventry = asyncHandler(async (req, res) => {
           title: 1,
           category: 1,
           StockQuantity: 1,
+          unit: 1,
           price: 1,
           discount: 1,
           owner: 1,
@@ -103,7 +105,7 @@ const showInventry = asyncHandler(async (req, res) => {
     }
     const totalProducts = await Product.countDocuments({
       owner: userId,
-      stockQuantity: { $gt: 0 },
+      StockQuantity: { $gt: 0 },
     });
     return res.status(200).json(
       new ApiResponse(
@@ -200,7 +202,7 @@ const searchProduct = asyncHandler(async (req, res) => {
       title: { $regex: title, $options: "i" },
       owner: userId,
     });
-    console.log("products are", products);
+
     if (products.length === 0) {
       throw new ApiError(400, "No products found matching the title.");
     }
@@ -242,6 +244,7 @@ const getProductById = async (req, res, next) => {
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
   const { title, category, StockQuantity, price, discount, unit } = req.body;
+
   const product = await Product.findById(productId);
   if (!product) {
     throw new ApiError(400, "Product not found");

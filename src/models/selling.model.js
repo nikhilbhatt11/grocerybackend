@@ -4,7 +4,7 @@ const SellingSchema = new Schema(
   {
     products: [
       {
-        productId: {
+        _id: {
           type: Schema.Types.ObjectId,
           ref: "Product",
           required: true,
@@ -17,7 +17,7 @@ const SellingSchema = new Schema(
           type: Number,
           required: true,
         },
-        price: {
+        discountedprice: {
           type: Number,
           required: true,
         },

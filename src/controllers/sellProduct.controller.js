@@ -4,77 +4,195 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Product } from "../models/product.model.js";
 import { Selling } from "../models/selling.model.js";
 
+// const createSale = asyncHandler(async (req, res) => {
+//   const {
+//     products,
+//     customername,
+//     contactNo,
+
+//     date,
+//     paymentMethod,
+//   } = req.body;
+
+//   const userId = req.user._id;
+//   if (!products || products.length === 0) {
+//     throw new ApiError(400, "Products array cannot be empty");
+//   }
+
+//   if (!customername || !contactNo) {
+//     throw new ApiError(400, "Customer name, contact number are required");
+//   }
+
+//   const soldProducts = [];
+//   let calculatedTotalSaleAmount = 0;
+//   for (const item of products) {
+//     const { _id, quantity, title, discountedprice, total } = item;
+//     console.log(_id, quantity, title, discountedprice, total);
+//     if (
+//       !title ||
+//       !discountedprice ||
+//       discountedprice <= 0 ||
+//       !_id ||
+//       !quantity ||
+//       quantity <= 0
+//     ) {
+//       throw new ApiError(
+//         400,
+//         "All fileds are required quantity and price should be grater tehna 0"
+//       );
+//     }
+//     const product = await Product.findById(_id);
+
+//     if (!product) {
+//       throw new ApiError(404, `Product with ID ${_id} not found`);
+//     }
+//     if (product.StockQuantity < quantity) {
+//       throw new ApiError(
+//         400,
+//         `Insufficient stock for product: ${product.title}`
+//       );
+//     }
+//     product.StockQuantity -= quantity;
+//     await product.save();
+//     const soldProduct = {
+//       _id,
+//       title: title,
+//       quantity,
+//       discountedprice,
+//       total: total,
+//     };
+//     console.log("sold product", soldProduct);
+//     soldProducts.push(soldProduct);
+//     calculatedTotalSaleAmount += soldProduct.total;
+//   }
+//   console.log("soldProduct", soldProducts);
+//   const sale = new Selling({
+//     products: soldProducts,
+//     customername,
+//     contactNo,
+//     totalSaleAmount: calculatedTotalSaleAmount,
+//     owner: userId,
+//     date: date,
+//     payment: paymentMethod,
+//   });
+//   console.log("sale", sale);
+//   await sale.save();
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(202, sale, "Sale created successfully"));
+// });
+
 const createSale = asyncHandler(async (req, res) => {
-  const {
-    products,
-    customername,
-    contactNo,
-    totalSaleAmount,
-    date,
-    paymentMethod,
-  } = req.body;
+  const { products, customername, contactNo, date, paymentMethod } = req.body;
+
   const userId = req.user._id;
+
+  // Check if products array is empty
   if (!products || products.length === 0) {
     throw new ApiError(400, "Products array cannot be empty");
   }
 
+  // Validate customer information
   if (!customername || !contactNo) {
-    throw new ApiError(400, "Customer name, contact number are required");
+    throw new ApiError(400, "Customer name and contact number are required");
   }
-  if (totalSaleAmount <= 0) {
-    throw new ApiError(400, "total sale amount should be greater than 0");
-  }
+
   const soldProducts = [];
   let calculatedTotalSaleAmount = 0;
+
+  // Loop through products and process them
   for (const item of products) {
-    const { productId, quantity, title, price } = item;
-    console.log(productId, quantity, title, price);
+    const { _id, quantity, title, discountedprice, total } = item;
+
+    // Log the product details
+    console.log(
+      "Processing product:",
+      _id,
+      quantity,
+      title,
+      discountedprice,
+      total
+    );
+
+    // Validate the product fields
     if (
       !title ||
-      !price ||
-      price <= 0 ||
-      !productId ||
+      !discountedprice ||
+      discountedprice <= 0 ||
+      !_id ||
       !quantity ||
       quantity <= 0
     ) {
+      console.log("Invalid product fields, skipping...");
       throw new ApiError(
         400,
-        "All fileds are required quantity and price should be grater tehna 0"
+        "All fields are required. Quantity and price should be greater than 0"
       );
     }
-    const product = await Product.findById(productId);
 
-    if (!product) {
-      throw new ApiError(404, `Product with ID ${productId} not found`);
+    try {
+      // Fetch the product by ID
+      const product = await Product.findById(_id);
+
+      if (!product) {
+        throw new ApiError(404, `Product with ID ${_id} not found`);
+      }
+
+      // Check if there is enough stock for the product
+      if (product.StockQuantity < quantity) {
+        throw new ApiError(
+          400,
+          `Insufficient stock for product: ${product.title}`
+        );
+      }
+
+      // Update the stock quantity
+      product.StockQuantity -= quantity;
+      await product.save();
+
+      // Create the sold product object
+      const soldProduct = {
+        _id,
+        title,
+        quantity,
+        discountedprice,
+        total: total,
+      };
+
+      console.log("Sold product:", soldProduct);
+
+      // Add sold product to the soldProducts array
+      soldProducts.push(soldProduct);
+
+      // Accumulate the total sale amount
+      calculatedTotalSaleAmount += soldProduct.total;
+    } catch (error) {
+      console.error("Error processing product:", item, error);
+      throw error; // Optionally rethrow the error to stop further processing
     }
-    if (product.StockQuantity < quantity) {
-      throw new ApiError(
-        400,
-        `Insufficient stock for product: ${product.title}`
-      );
-    }
-    product.StockQuantity -= quantity;
-    await product.save();
-    const soldProduct = {
-      productId,
-      title: product.title,
-      quantity,
-      price,
-      total: price * quantity,
-    };
-    soldProducts.push(soldProduct);
-    calculatedTotalSaleAmount += soldProduct.total;
   }
+
+  // Log the sold products and total sale amount
+  console.log("Sold products:", soldProducts);
+  console.log("Calculated total sale amount:", calculatedTotalSaleAmount);
+
+  // Create a new sale entry
   const sale = new Selling({
     products: soldProducts,
     customername,
     contactNo,
     totalSaleAmount: calculatedTotalSaleAmount,
     owner: userId,
-    date: date,
+    date,
     payment: paymentMethod,
   });
+
+  console.log("Sale object to be saved:", sale);
+
+  // Save the sale to the database
   await sale.save();
+
+  // Return the response
   return res
     .status(200)
     .json(new ApiResponse(202, sale, "Sale created successfully"));
@@ -359,6 +477,20 @@ const getTodaySales = asyncHandler(async (req, res) => {
         },
       },
     ]);
+    const totalEarningToday = await Selling.aggregate([
+      {
+        $match: {
+          owner: userId,
+          date: formattedDate,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$totalSaleAmount" },
+        },
+      },
+    ]);
     const totalSales = await Selling.countDocuments({
       owner: userId,
       date: formattedDate,
@@ -369,6 +501,7 @@ const getTodaySales = asyncHandler(async (req, res) => {
         {
           formattedDate,
           totalSales,
+          totalEarningToday,
           totalPages: Math.ceil(totalSales / pageSize),
           currentPage: pageNumber,
           todayAllSale,
