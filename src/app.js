@@ -25,10 +25,12 @@ app.use(cookieParser());
 import userRouter from "./routes/user.router.js";
 import productRouter from "./routes/product.router.js";
 import salesRouter from "./routes/sell.route.js";
+import wishlistRouter from "./routes/wishlist.router.js";
 //routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/sales", salesRouter);
+app.use("/api/v1/wishlist", wishlistRouter);
 
 app.all("*", (req, res, next) => {
   next(new ApiError(404, `Can't find ${req.originalUrl} on this server`));

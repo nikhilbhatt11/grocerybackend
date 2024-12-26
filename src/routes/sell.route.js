@@ -5,6 +5,7 @@ import {
   deleteProductOfSale,
   deleteSale,
   getDateSales,
+  getMonthlySales,
   getSaleById,
   getTodaySales,
   updateSale,
@@ -16,6 +17,7 @@ router.use(verifyJWT);
 router.route("/sale").post(createSale);
 router.route("/salesofdate").get(getDateSales);
 router.route("/todaysales").get(getTodaySales);
+router.route("/monthly").get(getMonthlySales);
 
 router.route("/:saleId").get(getSaleById);
 

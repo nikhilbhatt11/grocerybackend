@@ -29,6 +29,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
           category: 1,
           StockQuantity: 1,
           unit: 1,
+          buyprice: 1,
           price: 1,
           discount: 1,
           owner: 1,
@@ -41,7 +42,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
         .json(
           new ApiResponse(
             202,
-            {},
+            [],
             "No product is added please add product first"
           )
         );
@@ -60,7 +61,6 @@ const getAllProducts = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    console.error("Error fetching all products of the user", error);
     throw new ApiError(500, "Server error. Please try again later.");
   }
 });
@@ -92,6 +92,7 @@ const showInventry = asyncHandler(async (req, res) => {
           category: 1,
           StockQuantity: 1,
           unit: 1,
+          buyprice: 1,
           price: 1,
           discount: 1,
           owner: 1,
@@ -101,7 +102,7 @@ const showInventry = asyncHandler(async (req, res) => {
     if (products.length <= 0) {
       return res
         .status(200)
-        .json(new ApiResponse(202, {}, "The inventry is empty"));
+        .json(new ApiResponse(202, [], "The inventry is empty"));
     }
     const totalProducts = await Product.countDocuments({
       owner: userId,
@@ -120,19 +121,23 @@ const showInventry = asyncHandler(async (req, res) => {
       )
     );
   } catch (error) {
-    console.error("Error fetching Invertry of the user", error);
     throw new ApiError(500, "Server error. Please try again later.");
   }
 });
 
 const addProduct = asyncHandler(async (req, res) => {
-  const { title, category, StockQuantity, price, discount, unit } = req.body;
+  const { title, category, StockQuantity, buyprice, price, discount, unit } =
+    req.body;
   const userId = req.user._id;
   if ([title, category].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "title and category are required");
   }
   if (StockQuantity <= 0 || price <= 0) {
     throw new ApiError(400, "Stock Qty and Price should be greater than 0");
+  }
+  if (Number(buyprice) >= Number(price)) {
+    console.log(buyprice, price);
+    throw new ApiError(400, "buy price should be less than sell price");
   }
   if (discount < 0) {
     throw new ApiError(400, "Discount should not be less than 0");
@@ -143,6 +148,7 @@ const addProduct = asyncHandler(async (req, res) => {
       title,
       category,
       StockQuantity,
+      buyprice,
       price,
       discount,
       unit,
@@ -170,6 +176,7 @@ const addProduct = asyncHandler(async (req, res) => {
           title: 1,
           category: 1,
           StockQuantity: 1,
+          buyprice: 1,
           price: 1,
           discount: 1,
           unit: 1,
@@ -185,7 +192,6 @@ const addProduct = asyncHandler(async (req, res) => {
         new ApiResponse(201, productWithOwner, "Product added successfully")
       );
   } catch (error) {
-    console.error("Error adding product:", error);
     throw new ApiError(500, "Something went wroung while adding the product");
   }
 });
@@ -197,15 +203,16 @@ const searchProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, "product title is required");
   }
 
-  try {
-    const products = await Product.find({
-      title: { $regex: title, $options: "i" },
-      owner: userId,
-    });
+  const products = await Product.find({
+    title: { $regex: title, $options: "i" },
+    owner: userId,
+  });
 
-    if (products.length === 0) {
-      throw new ApiError(400, "No products found matching the title.");
-    }
+  if (!products || products.length === 0) {
+    throw new ApiError(400, "No products found matching the title.");
+  }
+
+  try {
     return res
       .status(200)
       .json(
@@ -216,10 +223,10 @@ const searchProduct = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.error("Error searching products:", error);
     throw new ApiError(500, "Server error. Please try again later.");
   }
 });
+
 const getProductById = async (req, res, next) => {
   const { productId } = req.params;
 
@@ -243,7 +250,8 @@ const getProductById = async (req, res, next) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  const { title, category, StockQuantity, price, discount, unit } = req.body;
+  const { title, category, StockQuantity, buyprice, price, discount, unit } =
+    req.body;
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -256,6 +264,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   if (StockQuantity < 0 || price < 0 || discount < 0 || discount > 100) {
     throw new ApiError(400, "Invalid numeric values provided");
   }
+  if (buyprice > price) {
+    throw new ApiError(400, "buy price should be less than sell price");
+  }
 
   product.title = title || product.title;
   product.category = category || product.category;
@@ -263,7 +274,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     StockQuantity != null
       ? product.StockQuantity + StockQuantity
       : product.StockQuantity;
-  product.price = price ?? product.price;
+  (product.buyprice = buyprice ?? product.buyprice),
+    (product.price = price ?? product.price);
   product.discount = discount ?? product.discount;
   product.unit = unit || product.unit;
   await product.save();
@@ -275,14 +287,12 @@ const updateProduct = asyncHandler(async (req, res) => {
 
 const deleteProduct = asyncHandler(async (req, res) => {
   const { productId } = req.params;
-  try {
-    const deletedProduct = await Product.findByIdAndDelete(productId);
-    if (!deletedProduct) {
-      return res
-        .status(404)
-        .json(new ApiResponse(404, {}, "Product not found"));
-    }
+  const deletedProduct = await Product.findByIdAndDelete(productId);
+  if (!deletedProduct) {
+    return res.status(404).json(new ApiResponse(404, {}, "Product not found"));
+  }
 
+  try {
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Product deleted successfully"));

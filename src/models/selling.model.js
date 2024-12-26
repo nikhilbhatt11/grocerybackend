@@ -17,6 +17,7 @@ const SellingSchema = new Schema(
           type: Number,
           required: true,
         },
+
         discountedprice: {
           type: Number,
           required: true,
@@ -43,6 +44,10 @@ const SellingSchema = new Schema(
       },
     },
     totalSaleAmount: {
+      type: Number,
+      required: true,
+    },
+    totalwithbuyprice: {
       type: Number,
       required: true,
     },
