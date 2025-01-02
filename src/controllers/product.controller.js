@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Product } from "../models/product.model.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 5 } = req.query;
   const userId = req.user._id;
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
@@ -66,10 +66,13 @@ const getAllProducts = asyncHandler(async (req, res) => {
 });
 
 const showInventry = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 5 } = req.query;
+
   const userId = req.user._id;
+
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
+
   if (pageNumber <= 0 || limitNumber <= 0) {
     throw new ApiError(400, "Page and limit must be positive integers.");
   }
@@ -99,6 +102,7 @@ const showInventry = asyncHandler(async (req, res) => {
         },
       },
     ]);
+
     if (products.length <= 0) {
       return res
         .status(200)
@@ -136,7 +140,6 @@ const addProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Stock Qty and Price should be greater than 0");
   }
   if (Number(buyprice) >= Number(price)) {
-    console.log(buyprice, price);
     throw new ApiError(400, "buy price should be less than sell price");
   }
   if (discount < 0) {

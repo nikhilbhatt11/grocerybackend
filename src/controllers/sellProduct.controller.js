@@ -6,7 +6,7 @@ import { Selling } from "../models/selling.model.js";
 
 const createSale = asyncHandler(async (req, res) => {
   const { products, customername, contactNo, date, paymentMethod } = req.body;
-  console.log(products);
+
   const userId = req.user._id;
 
   if (!products || products.length === 0) {
@@ -195,7 +195,6 @@ const updateSale = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.log(error);
     throw new ApiError(500, "Error in updating the sale");
   }
 });
@@ -283,7 +282,6 @@ const deleteProductOfSale = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.log(error);
     throw new ApiError(500, "Error in deleting the sale product");
   }
 });
@@ -291,7 +289,7 @@ const deleteProductOfSale = asyncHandler(async (req, res) => {
 const getDateSales = asyncHandler(async (req, res) => {
   const { date } = req.query;
 
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 5 } = req.query;
   const userId = req.user._id;
 
   if (!date) {
@@ -371,6 +369,21 @@ const getDateSales = asyncHandler(async (req, res) => {
       owner: userId,
       date: date,
     });
+
+    const totalprofitOfDay = await Selling.aggregate([
+      {
+        $match: {
+          owner: userId,
+          date: date,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$totalwithbuyprice" },
+        },
+      },
+    ]);
     return res.status(200).json(
       new ApiResponse(
         201,
@@ -381,6 +394,7 @@ const getDateSales = asyncHandler(async (req, res) => {
           totalPages: Math.ceil(totalSales / pageSize),
           currentPage: pageNumber,
           allsalesofDate,
+          totalprofitOfDay,
         },
         "All sales of the given date sended successfully"
       )
@@ -397,9 +411,9 @@ const getTodaySales = asyncHandler(async (req, res) => {
   const year = date.getFullYear();
   const formattedDate = `${day}-${month}-${year}`;
 
-  const { page = 1, limit = 10 } = req.query;
+  const { page = 1, limit = 5 } = req.query;
   const userId = req.user._id;
-
+  console.log("controller called");
   const pageNumber = parseInt(page, 10);
   const pageSize = parseInt(limit, 10);
   const skip = (pageNumber - 1) * pageSize;

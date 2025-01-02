@@ -50,7 +50,7 @@ const createTodo = asyncHandler(async (req, res) => {
 
 const toggleTodoStatus = asyncHandler(async (req, res) => {
   const { todoId, subTodoId } = req.params;
-  console.log(todoId, subTodoId);
+
   const todo = await Wishlist.findById(todoId);
   if (!todo) {
     throw new ApiError(400, "todo not found");
@@ -90,8 +90,6 @@ const updateSubTodod = asyncHandler(async (req, res) => {
   const { todoId, subTodoId } = req.params;
   const { description } = req.body;
 
-  console.log(todoId, subTodoId, description);
-
   const todo = await Wishlist.findById(todoId);
   if (!todo) {
     throw new ApiError(401, "Todo of given id not found");
@@ -115,7 +113,6 @@ const updateSubTodod = asyncHandler(async (req, res) => {
 
 const deleteTodo = asyncHandler(async (req, res) => {
   const { todoId } = req.params;
-  console.log(todoId);
 
   const deltedTodo = await Wishlist.findByIdAndDelete(todoId);
   if (!deltedTodo) {
@@ -129,9 +126,9 @@ const deleteTodo = asyncHandler(async (req, res) => {
 
 const deleteSubTodo = asyncHandler(async (req, res) => {
   const { todoId, subTodoId } = req.params;
-  console.log(todoId, subTodoId);
+
   const todo = await Wishlist.findById(todoId);
-  console.log(todo);
+
   const subTodoIndex = todo.subTodos.findIndex(
     (subtodo) => subtodo.id === subTodoId
   );
@@ -139,7 +136,6 @@ const deleteSubTodo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "subtodo not found in the list");
   }
   const deletedsubtodo = todo.subTodos.splice(subTodoIndex, 1);
-  console.log(deleteSubTodo);
 
   await todo.save();
   return res
