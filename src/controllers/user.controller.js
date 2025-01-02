@@ -182,5 +182,4 @@ export {
   changeCurrentPassword,
   getCurrentUser,
   updateAccountDetails,
-  expireAccessToken,
 };
