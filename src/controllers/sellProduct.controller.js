@@ -289,7 +289,7 @@ const deleteProductOfSale = asyncHandler(async (req, res) => {
 const getDateSales = asyncHandler(async (req, res) => {
   const { date } = req.query;
 
-  const { page = 1, limit = 5 } = req.query;
+  const { page = 1, limit = 50 } = req.query;
   const userId = req.user._id;
 
   if (!date) {
@@ -411,7 +411,7 @@ const getTodaySales = asyncHandler(async (req, res) => {
   const year = date.getFullYear();
   const formattedDate = `${day}-${month}-${year}`;
 
-  const { page = 1, limit = 5 } = req.query;
+  const { page = 1, limit = 50 } = req.query;
   const userId = req.user._id;
   console.log("controller called");
   const pageNumber = parseInt(page, 10);
