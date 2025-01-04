@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Product } from "../models/product.model.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 5 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
   const userId = req.user._id;
   const pageNumber = parseInt(page, 10);
   const limitNumber = parseInt(limit, 10);
@@ -66,7 +66,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
 });
 
 const showInventry = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 5 } = req.query;
+  const { page = 1, limit = 20 } = req.query;
 
   const userId = req.user._id;
 
