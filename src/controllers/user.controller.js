@@ -5,6 +5,8 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 const options = {
   httpOnly: true,
+  secure: true,
+  sameSite: "None",
 };
 
 const generateAccessAndRefreshToken = async (userId) => {
