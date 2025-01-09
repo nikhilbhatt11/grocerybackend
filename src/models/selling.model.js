@@ -22,6 +22,10 @@ const SellingSchema = new Schema(
           type: Number,
           required: true,
         },
+        buyprice: {
+          type: Number,
+          required: true,
+        },
         total: {
           type: Number,
           required: true,

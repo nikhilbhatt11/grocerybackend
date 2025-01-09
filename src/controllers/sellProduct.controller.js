@@ -175,6 +175,11 @@ const updateSale = asyncHandler(async (req, res) => {
     (sum, product) => sum + product.total,
     0
   );
+  sale.totalwithbuyprice = saledProducts.reduce(
+    (sum, product) => sum + product.buyprice * product.quantity,
+    0
+  );
+
   let newSaledifference;
 
   if (oldSaleTotal > sale.totalSaleAmount) {
@@ -182,6 +187,7 @@ const updateSale = asyncHandler(async (req, res) => {
   } else {
     newSaledifference = sale.totalSaleAmount - oldSaleTotal;
   }
+
   try {
     await sale.save();
 
@@ -384,6 +390,9 @@ const getDateSales = asyncHandler(async (req, res) => {
         },
       },
     ]);
+    const profitofDay =
+      totalEarning[0]?.totalAmount - totalprofitOfDay[0]?.totalAmount;
+
     return res.status(200).json(
       new ApiResponse(
         201,
@@ -394,7 +403,7 @@ const getDateSales = asyncHandler(async (req, res) => {
           totalPages: Math.ceil(totalSales / pageSize),
           currentPage: pageNumber,
           allsalesofDate,
-          totalprofitOfDay,
+          profitofDay,
         },
         "All sales of the given date sended successfully"
       )
@@ -413,7 +422,7 @@ const getTodaySales = asyncHandler(async (req, res) => {
 
   const { page = 1, limit = 50 } = req.query;
   const userId = req.user._id;
-  console.log("controller called");
+
   const pageNumber = parseInt(page, 10);
   const pageSize = parseInt(limit, 10);
   const skip = (pageNumber - 1) * pageSize;
@@ -486,6 +495,10 @@ const getTodaySales = asyncHandler(async (req, res) => {
         },
       },
     ]);
+
+    const profitToday =
+      totalEarningToday[0]?.totalAmount - totalprofitToday[0]?.totalAmount;
+
     const totalSales = await Selling.countDocuments({
       owner: userId,
       date: formattedDate,
@@ -497,7 +510,7 @@ const getTodaySales = asyncHandler(async (req, res) => {
           formattedDate,
           totalSales,
           totalEarningToday,
-          totalprofitToday,
+          profitToday,
           totalPages: Math.ceil(totalSales / pageSize),
           currentPage: pageNumber,
           todayAllSale,
